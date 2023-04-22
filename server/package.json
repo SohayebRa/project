@@ -1,0 +1,38 @@
+{
+  "name": "project",
+  "version": "1.0.0",
+  "description": "Site de vente de propriétés",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js",
+    "db:import": "node ./seed/seeder.js -i",
+    "db:remove": "node ./seed/seeder.js -e"
+  },
+  "keywords": [
+    "Ventes immobiliere",
+    "Real state"
+  ],
+  "author": "Sohayeb RAJJAF",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "body-parser": "^1.20.2",
+    "cloudinary": "^1.36.1",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "express-validator": "^6.14.2",
+    "jsonwebtoken": "^8.5.1",
+    "multer": "^1.4.5-lts.1",
+    "multer-storage-cloudinary": "^4.0.0",
+    "mysql2": "^3.2.0",
+    "nodemailer": "^6.9.1",
+    "sequelize": "^6.21.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.19"
+  }
+}
