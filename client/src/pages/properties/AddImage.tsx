@@ -3,34 +3,15 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Cookies from "js-cookie";
 import { useSetPageTitle } from "./../../hooks/useSetPageTitle";
-import Layout from "../../components/Layout";
 import Dropzone, { FileWithPath } from "react-dropzone";
-
-interface PropertyData {
-  page: string;
-  errors?: { msg: string }[];
-  property?: {
-    title: string;
-    description: string;
-    category?: string | null;
-    price: number | null;
-    rooms: number | null;
-    wc: number | null;
-    parking: number | null;
-    street: string | null;
-    lat: number | null;
-    lng: number | null;
-  };
-  msg: string;
-  redirect?: string;
-}
+import PageTitle from "../../components/PageTitle";
 
 const AddImage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [file, setFile] = useState<FileWithPath | null>(null);
 
-  const [getData, setGetData] = useState<PropertyData>({
+  const [getData, setGetData] = useState<AddImageProps>({
     page: "",
     errors: [],
     property: {
@@ -94,9 +75,6 @@ const AddImage = () => {
       formData.append("image", file);
     }
 
-    // Console log the size of formData
-    console.log(formData, formData.get("image"));
-
     const response = await fetch(url + "/admin/add-image/" + id, {
       method: "POST",
       headers: {
@@ -114,10 +92,7 @@ const AddImage = () => {
 
   return (
     <>
-      <Layout />
-      <h2 className="text-center text-2xl font-semibold text-indigo-900 pt-12">
-        {getData.page}
-      </h2>
+      <PageTitle getData={getData} />
       {getData.errors ? (
         <div className="max-w-md mx-auto my-10">
           {getData.errors.map((error) => (
@@ -140,7 +115,7 @@ const AddImage = () => {
       )}
       <div className="mx-auto max-w-4xl my-10 md:px-10">
         <div className="bg-white py-8 px-4  shadow-md border border-[1] rounded-md">
-          <form className="space-y-5" method="POST" onSubmit={handleSubmit}>
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div className="space-y-1 h-36 border-gray-300  border-dashed border-2 rounded-md flex items-center justify-center text-gray-500">
               <Dropzone onDrop={handleDrop} maxFiles={1} maxSize={5242880}>
                 {({ getRootProps, getInputProps }) => (

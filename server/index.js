@@ -5,6 +5,7 @@ import cors from "cors";
 import db from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import propretyRoutes from "./routes/propertyRoutes.js";
+import appRoutes from "./routes/appRoutes.js";
 
 // Create app
 const app = express();
@@ -42,6 +43,7 @@ try {
 }
 
 // Routing
+app.use("/", appRoutes);
 app.use("/auth", userRoutes);
 app.use("/", propretyRoutes);
 

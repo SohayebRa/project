@@ -3,37 +3,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useSetPageTitle } from "../../hooks/useSetPageTitle";
 import Cookies from "js-cookie";
 import { categories } from "../../helpers/arrays";
-import Layout from "../../components/Layout";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import MessageForm from "../../components/MessageForm";
+import ViewCard from "../../components/ViewCard";
 
-interface PropertyData {
-  page: string;
-  errors?: { msg: string }[];
-  property?: {
-    id: string;
-    title: string;
-    description: string;
-    categoryId?: number | null;
-    price: number | null;
-    rooms: number | null;
-    wc: number | null;
-    parking: number | null;
-    street: string | null;
-    lat: number | null;
-    lng: number | null;
-    image: string;
-    published: boolean;
-  };
-  user: {};
-  isSeller: boolean;
-  msg: string;
-  redirect?: string;
-}
 const View = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const [getData, setGetData] = useState<PropertyData>({
+  const [getData, setGetData] = useState<ViewProps>({
     page: "",
     errors: [],
     property: {
@@ -51,7 +29,11 @@ const View = () => {
       image: "",
       published: false,
     },
-    user: {},
+    user: {
+      id: null,
+      name: "",
+      email: "",
+    },
     isSeller: false,
     msg: "",
     redirect: "",
@@ -64,7 +46,7 @@ const View = () => {
 
   const [mapKey, setMapKey] = useState<number>(0);
 
-  const [sent, setSent] = useState<boolean>(false);
+  const [message, setMessage] = useState<string>("");
 
   const url = import.meta.env.VITE_BACKEND_URL;
 
@@ -96,8 +78,8 @@ const View = () => {
         })
           .then((response) => response.json())
           .then((data) => {
-            setPosition([data.property.lat, data.property.lng]);
             setGetData(data);
+            console.log(data);
           });
   }, []);
 
@@ -114,13 +96,36 @@ const View = () => {
   }, [setPageTitle, getData]);
 
   useEffect(() => {
-    setMapKey((prevKey) => prevKey + 1); // update key when position changes
+    setMapKey((prevKey) => prevKey + 1);
   }, [position]);
 
-  return (
-    <div>
-      <Layout />
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const session = Cookies.get("_token");
 
+    const response = await fetch(url + "/messages/" + id, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session}`,
+      },
+      body: JSON.stringify({
+        message,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setMessage("");
+        setGetData(data);
+        setTimeout(() => {
+          setGetData((prevData) => ({ ...prevData, msg: "" }));
+        }, 3000);
+      })
+      .catch((error) => console.error(error));
+  };
+
+  return (
+    <div className="pb-20">
       <div className="mx-auto sm:container w-11/12 flex flex-col gap-8 items-start">
         <div className="flex items-center flex-col gap-2 divide-y divide-gray-300 ">
           <div className="py-5">
@@ -144,46 +149,7 @@ const View = () => {
               </a>
             </div>
             <div className="mt-5 md:flex md:gap-4 md:items-start">
-              <div className="md:w-2/3 bg-white shadow-md">
-                <img
-                  src={`${getData.property?.image}`}
-                  alt={`Imagen de la Propiedad: ${getData.property?.title}`}
-                />
-                <div className="px-5 py-6 space-y-4">
-                  <p className="text-sm lg:text-lg text-gray-600">
-                    {getData.property?.description}
-                  </p>
-                  <h2 className="text-xl lg:text-2xl leading-6 font-medium text-indigo-800">
-                    Information de la propriété
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <p className="uppercase text-gray-600 font-medium text-xs">
-                      Chambres
-                      <span className="text-gray-800 block text-base lg:text-lg">
-                        {getData.property?.rooms}
-                      </span>
-                    </p>
-                    <p className="uppercase text-gray-600 font-medium text-xs">
-                      WC
-                      <span className="text-gray-800 block text-base lg:text-lg">
-                        {getData.property?.wc}
-                      </span>
-                    </p>
-                    <p className="uppercase text-gray-600 font-medium text-xs">
-                      Parking
-                      <span className="text-gray-800 block text-base lg:text-lg">
-                        {getData.property?.parking}
-                      </span>
-                    </p>
-                    <p className="uppercase text-gray-600 font-medium text-xs">
-                      Prix
-                      <span className="text-gray-800 block text-base lg:text-lg">
-                        {getData.property?.price} €
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <ViewCard getData={getData} />
 
               <div className="md:w-1/3 bg-white shadow-md">
                 <div
@@ -233,60 +199,27 @@ const View = () => {
                 </div>
                 {getData.isSeller ? (
                   <div className="px-5 pb-5 flex">
-                    <a className="bg-indigo-800 hover:bg-indigo-900 text-white font-medium uppercase text-sm w-full py-3 cursor-pointer text-center rounded-sm">
+                    <a
+                      href={`/messages/${id}`}
+                      className="bg-indigo-800 hover:bg-indigo-900 text-white font-medium uppercase text-sm w-full py-3 cursor-pointer text-center rounded-sm"
+                    >
                       Voir messsages
                     </a>
                   </div>
                 ) : getData.user ? (
                   <div className="px-5 pb-5">
-                    {sent && (
-                      <div className="px-5 pb-5">
-                        <p className="bg-green-100 text-green-600 border border-green-600 text-sm text-center p-2 mb-1">
-                          Message envoyé avec succès
-                        </p>
-                      </div>
-                    )}
-                    {getData.errors && (
-                      <div className="max-w-md mx-auto my-10">
-                        {getData.errors.map((error) => (
-                          <p
-                            key={error.msg}
-                            className="bg-red-100 text-red-600 border border-red-600 text-sm text-center p-2 mb-1"
-                          >
-                            {error.msg}
-                          </p>
-                        ))}
-                      </div>
-                    )}
-                    <form method="POST">
-                      <div className="space-y-2">
-                        <label
-                          htmlFor="message"
-                          className="uppercase text-gray-600 font-medium text-xs"
-                        >
-                          Message
-                        </label>
-                        <textarea
-                          className="w-full p-2 border border-gray-300 shadow-md placeholder-gray-400 resize-none"
-                          name="message"
-                          id="message"
-                          placeholder="Ecrivez votre message ici"
-                          rows={5}
-                        ></textarea>
-
-                        <input
-                          type="submit"
-                          value="Envoyer"
-                          className="bg-indigo-800 hover:bg-indigo-900 text-white font-medium uppercase text-sm w-full py-3 cursor-pointer text-center rounded-sm"
-                        />
-                      </div>
-                    </form>
+                    <MessageForm
+                      handleSubmit={handleSubmit}
+                      getData={getData}
+                      message={message}
+                      setMessage={setMessage}
+                    />
                   </div>
                 ) : (
                   <div className="px-5 pb-5">
-                    <label className="uppercase text-gray-600 font-medium text-xs ">
+                    <span className="uppercase text-gray-600 font-medium text-xs ">
                       Message
-                    </label>
+                    </span>
                     <div className="flex flex-col items-center lg:items-start lg:flex-row justify-centeer gap-1">
                       <p className="text-gray-600 text-sm lg:text-base">
                         Si vous souhiatez contacter le vendeur

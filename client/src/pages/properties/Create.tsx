@@ -8,31 +8,12 @@ import { categories } from "../../helpers/arrays";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 
 import "leaflet/dist/leaflet.css";
-
-interface PropertyData {
-  page: string;
-  errors?: { msg: string }[];
-  property?: {
-    title: string;
-    description: string;
-    category?: string | null;
-    price: number | null;
-    rooms: number | null;
-    wc: number | null;
-    parking: number | null;
-    street: string | null;
-    lat: number | null;
-    lng: number | null;
-  };
-  msg: string;
-  redirect?: string | null;
-  id?: string | null;
-}
+import PageTitle from "../../components/PageTitle";
 
 const Create = () => {
   const navigate = useNavigate();
 
-  const [getData, setGetData] = useState<PropertyData>({
+  const [getData, setGetData] = useState<CreateProps>({
     page: "",
     errors: [],
     property: {
@@ -52,37 +33,26 @@ const Create = () => {
     id: null,
   });
 
-  const [title, setTitle] = useState(
-    getData.property?.title ? getData.property?.title : ""
-  );
-  const [description, setDescription] = useState(
-    getData.property?.description ? getData.property?.description : ""
-  );
-  const [category, setCategory] = useState(getData.property?.category || "");
-  const [price, setPrice] = useState(
-    getData.property?.price ? getData.property?.price : 0
-  );
-  const [rooms, setRooms] = useState(
-    getData.property?.rooms ? getData.property?.rooms : 0
-  );
-  const [wc, setWc] = useState(getData.property?.wc ? getData.property?.wc : 0);
-  const [parking, setParking] = useState(
-    getData.property?.parking ? getData.property?.parking : 0
-  );
-  const [street, setStreet] = useState(
-    getData.property?.street ? getData.property?.street : ""
-  );
-  const [lat, setLat] = useState(
-    getData.property?.lat ? getData.property?.lat : 48.866667
-  );
-  const [lng, setLng] = useState(
-    getData.property?.lng ? getData.property?.lng : 2.333333
-  );
+  const [formData, setFormData] = useState({
+    title: getData.property?.title || "",
+    description: getData.property?.description || "",
+    category: getData.property?.category || "",
+    price: getData.property?.price || 0,
+    rooms: getData.property?.rooms || 0,
+    wc: getData.property?.wc || 0,
+    parking: getData.property?.parking || 0,
+    street: getData.property?.street || "",
+    lat: getData.property?.lat || 48.866667,
+    lng: getData.property?.lng || 2.333333,
+  });
 
   const handleMarkerDragEnd = useCallback(async (e: any) => {
     const newPosition = e.target.getLatLng();
-    setLat(newPosition.lat);
-    setLng(newPosition.lng);
+    setFormData({
+      ...formData,
+      lat: newPosition.lat,
+      lng: newPosition.lng,
+    });
 
     try {
       const response = await fetch(
@@ -98,20 +68,23 @@ const Create = () => {
         town && town ? `${town},` : city && city ? `${city},` : ""
       } ${country && country ? country : ""}`;
 
-      setStreet(fullAdress);
+      setFormData({
+        ...formData,
+        street: fullAdress,
+      });
     } catch (error) {
       console.error(error);
     }
   }, []);
 
   const [position, setPosition] = useState<[number, number]>([
-    lat || 48.866667,
-    lng || 2.333333,
+    formData.lat || 48.866667,
+    formData.lng || 2.333333,
   ]);
 
   useEffect(() => {
-    setPosition([lat, lng]);
-  }, [lat, lng]);
+    setPosition([formData.lat, formData.lng]);
+  }, [formData.lat, formData.lng]);
 
   const url = import.meta.env.VITE_BACKEND_URL;
 
@@ -161,33 +134,18 @@ const Create = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session}`,
       },
-      body: JSON.stringify({
-        title,
-        description,
-        category,
-        price,
-        rooms,
-        wc,
-        parking,
-        street,
-        lat,
-        lng,
-      }),
+      body: JSON.stringify(formData),
     })
       .then((response) => response.json())
       .then((data) => {
         setGetData(data);
-        console.log(data);
       })
       .catch((error) => console.error(error));
   };
 
   return (
-    <>
-      <Layout />
-      <h2 className="text-center text-2xl font-semibold text-indigo-900 pt-12">
-        {getData.page}
-      </h2>
+    <div className="pb-12">
+      <PageTitle getData={getData} />
       {getData.errors ? (
         <div className="max-w-md mx-auto my-10">
           {getData.errors.map((error) => (
@@ -208,13 +166,9 @@ const Create = () => {
           </div>
         )
       )}
-      <div className="mx-auto max-w-4xl my-10 md:px-10">
+      <div className="mx-auto max-w-4xl my-10 px-4 md:px-10">
         <div className="bg-white py-8 px-4  shadow-md border border-[1] rounded-md">
-          <form
-            className="space-y-5"
-            action="/admin/create"
-            onSubmit={handleSubmit}
-          >
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div className="space-y-1">
               <h3 className="text-lg leading-6 font-normal text-gray-900 text-center">
                 Information générale
@@ -236,9 +190,12 @@ const Create = () => {
                 placeholder="Titre de la propriété: ex: 'Maison de 3 chambres'"
                 type="text"
                 name="title"
-                value={title}
+                value={formData.title}
                 onChange={(e) => {
-                  setTitle(e.target.value);
+                  setFormData({
+                    ...formData,
+                    title: e.target.value,
+                  });
                 }}
               />
             </div>
@@ -254,9 +211,12 @@ const Create = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-sm placeholder-gray-400"
                 placeholder="Décrivez la propriété en quelques phrases"
                 name="description"
-                value={description}
+                value={formData.description}
                 onChange={(e) => {
-                  setDescription(e.target.value);
+                  setFormData({
+                    ...formData,
+                    description: e.target.value,
+                  });
                 }}
               ></textarea>
             </div>
@@ -272,9 +232,12 @@ const Create = () => {
                   id="category"
                   className="w-full px-3 py-2 border border-gray-300 rounded-sm placeholder-gray-400"
                   name="category"
-                  value={category}
+                  value={formData.category}
                   onChange={(e) => {
-                    setCategory(e.target.value);
+                    setFormData({
+                      ...formData,
+                      category: e.target.value,
+                    });
                   }}
                 >
                   <option value="">-- Sélectionnez --</option>
@@ -298,13 +261,19 @@ const Create = () => {
                   placeholder="Prix de la propriété: ex: 100000€"
                   type="number"
                   name="price"
-                  value={price?.toString()}
+                  value={formData.price?.toString()}
                   onChange={(e) => {
                     const valuePrice = e.target.value;
                     {
                       valuePrice === ""
-                        ? setPrice(0)
-                        : setPrice(parseFloat(valuePrice));
+                        ? setFormData({
+                            ...formData,
+                            price: 0,
+                          })
+                        : setFormData({
+                            ...formData,
+                            price: parseFloat(valuePrice),
+                          });
                     }
                   }}
                 />
@@ -322,13 +291,19 @@ const Create = () => {
                   id="rooms"
                   className="w-full px-3 py-2 border border-gray-300 rounded-sm placeholder-gray-400"
                   name="rooms"
-                  value={rooms?.toString()}
+                  value={formData.rooms?.toString()}
                   onChange={(e) => {
                     const valueRooms = e.target.value;
                     {
                       valueRooms === ""
-                        ? setRooms(0)
-                        : setRooms(parseFloat(valueRooms));
+                        ? setFormData({
+                            ...formData,
+                            rooms: 0,
+                          })
+                        : setFormData({
+                            ...formData,
+                            rooms: parseFloat(valueRooms),
+                          });
                     }
                   }}
                 >
@@ -352,11 +327,19 @@ const Create = () => {
                   id="wc"
                   className="w-full px-3 py-2 border border-gray-300 rounded-sm placeholder-gray-400"
                   name="wc"
-                  value={wc?.toString()}
+                  value={formData.wc?.toString()}
                   onChange={(e) => {
                     const valueWc = e.target.value;
                     {
-                      valueWc === "" ? setWc(0) : setWc(parseFloat(valueWc));
+                      valueWc === ""
+                        ? setFormData({
+                            ...formData,
+                            wc: 0,
+                          })
+                        : setFormData({
+                            ...formData,
+                            wc: parseFloat(valueWc),
+                          });
                     }
                   }}
                 >
@@ -380,13 +363,19 @@ const Create = () => {
                   id="parking"
                   className="w-full px-3 py-2 border border-gray-300 rounded-sm placeholder-gray-400"
                   name="parking"
-                  value={parking?.toString()}
+                  value={formData.parking?.toString()}
                   onChange={(e) => {
                     const valueParking = e.target.value;
                     {
                       valueParking === ""
-                        ? setParking(0)
-                        : setParking(parseFloat(valueParking));
+                        ? setFormData({
+                            ...formData,
+                            parking: 0,
+                          })
+                        : setFormData({
+                            ...formData,
+                            parking: parseFloat(valueParking),
+                          });
                     }
                   }}
                 >
@@ -429,7 +418,7 @@ const Create = () => {
                 >
                   <Popup autoPan={true}>
                     <strong className="font-bold text-indigo-900 ">
-                      {street}
+                      {formData.street}
                     </strong>
                   </Popup>
                 </Marker>
@@ -441,27 +430,33 @@ const Create = () => {
               name="street"
               id="street"
               placeholder="Déplacez le marqueur sur la carte pour localiser votre propriété"
-              value={street}
+              value={formData.street}
               disabled
             />
             <input
               type="hidden"
               name="lat"
               id="lat"
-              value={lat}
+              value={formData.lat}
               onChange={(e) => {
                 const valueLat = Number(e.target.value);
-                setLat(valueLat);
+                setFormData({
+                  ...formData,
+                  lat: valueLat,
+                });
               }}
             />
             <input
               type="hidden"
               name="lng"
               id="lng"
-              value={lng}
+              value={formData.lng}
               onChange={(e) => {
                 const valueLng = Number(e.target.value);
-                setLng(valueLng);
+                setFormData({
+                  ...formData,
+                  lng: valueLng,
+                });
               }}
             />
 
@@ -473,7 +468,7 @@ const Create = () => {
           </form>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

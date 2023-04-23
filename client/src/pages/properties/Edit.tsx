@@ -1,55 +1,25 @@
 // Property create form
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Cookies from "js-cookie";
 import { useSetPageTitle } from "../../hooks/useSetPageTitle";
-import Layout from "../../components/Layout";
 import { categories } from "../../helpers/arrays";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 
 import "leaflet/dist/leaflet.css";
+import PageTitle from "../../components/PageTitle";
 
-interface PropertyData {
-  page: string;
-  errors?: { msg: string }[];
-  property?: {
-    title: string;
-    description: string;
-    category?: string | null;
-    price: number | null;
-    rooms: number | null;
-    wc: number | null;
-    parking: number | null;
-    street: string | null;
-    lat: number | null;
-    lng: number | null;
-  };
-  msg: string;
-  redirect?: string | null;
-  id?: string | null;
-}
-
-interface OSMResponse {
-  address: {
-    road: string;
-    house_number: string;
-    city: string;
-    town: string;
-    postcode: string;
-    country: string;
-  };
-}
-
-const Create = () => {
+const Edit = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
 
-  const [getData, setGetData] = useState<PropertyData>({
+  const [getData, setGetData] = useState<EditProps>({
     page: "",
     errors: [],
     property: {
       title: "",
       description: "",
-      category: null,
+      categoryId: "",
       price: null,
       rooms: null,
       wc: null,
@@ -59,45 +29,38 @@ const Create = () => {
       lng: null,
     },
     msg: "",
-    redirect: null,
+    redirect: "",
     id: null,
   });
 
-  const [title, setTitle] = useState(
-    getData.property?.title ? getData.property?.title : ""
-  );
-  const [description, setDescription] = useState(
-    getData.property?.description ? getData.property?.description : ""
-  );
-  const [category, setCategory] = useState(getData.property?.category || "");
-  const [price, setPrice] = useState(
-    getData.property?.price ? getData.property?.price : 0
-  );
-  const [rooms, setRooms] = useState(
-    getData.property?.rooms ? getData.property?.rooms : 0
-  );
-  const [wc, setWc] = useState(getData.property?.wc ? getData.property?.wc : 0);
-  const [parking, setParking] = useState(
-    getData.property?.parking ? getData.property?.parking : 0
-  );
-  const [street, setStreet] = useState(
-    getData.property?.street ? getData.property?.street : ""
-  );
-  const [lat, setLat] = useState(
-    getData.property?.lat ? getData.property?.lat : 48.866667
-  );
-  const [lng, setLng] = useState(
-    getData.property?.lng ? getData.property?.lng : 2.333333
+  const [formData, setFormData] = useState({
+    title: getData.property?.title || "",
+    description: getData.property?.description || "",
+    category: getData.property?.categoryId || "",
+    price: getData.property?.price || 0,
+    rooms: getData.property?.rooms || 0,
+    wc: getData.property?.wc || 0,
+    parking: getData.property?.parking || 0,
+    street: getData.property?.street || "",
+    lat: getData.property?.lat || 48.866667,
+    lng: getData.property?.lng || 2.333333,
+  });
+
+  const [containerPosition, setContainerPosition] = useState<[number, number]>(
+    [formData.lat, formData.lng] || [48.866667, 2.333333]
   );
 
   const handleMarkerDragEnd = async (e: any) => {
     const newPosition = e.target.getLatLng();
-    setLat(newPosition.lat);
-    setLng(newPosition.lng);
+    setFormData({
+      ...formData,
+      lat: newPosition.lat,
+      lng: newPosition.lng,
+    });
 
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${newPosition.lat}&lon=${newPosition.lng}`
       );
       const addressData = await response.json();
       const { road, house_number, city, town, postcode, country } =
@@ -109,7 +72,10 @@ const Create = () => {
         town && town ? `${town},` : city && city ? `${city},` : ""
       } ${country && country ? country : ""}`;
 
-      setStreet(fullAdress);
+      setFormData({
+        ...formData,
+        street: fullAdress,
+      });
     } catch (error) {
       console.error(error);
     }
@@ -120,7 +86,7 @@ const Create = () => {
   useEffect(() => {
     const session = Cookies.get("_token");
 
-    fetch(url + "/admin/create", {
+    fetch(url + "/admin/edit/" + id, {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -130,8 +96,29 @@ const Create = () => {
       },
     })
       .then((response) => response.json())
-      .then((data) => setGetData(data));
+      .then((data) => {
+        setGetData(data);
+      });
   }, []);
+
+  useEffect(() => {
+    setFormData({
+      title: getData.property?.title || "",
+      description: getData.property?.description || "",
+      category: getData.property?.categoryId || "",
+      price: getData.property?.price || 0,
+      rooms: getData.property?.rooms || 0,
+      wc: getData.property?.wc || 0,
+      parking: getData.property?.parking || 0,
+      street: getData.property?.street || "",
+      lat: getData.property?.lat || 48.866667,
+      lng: getData.property?.lng || 2.333333,
+    });
+
+    getData.property?.lat &&
+      getData.property?.lng &&
+      setContainerPosition([getData.property?.lat, getData.property?.lng]);
+  }, [getData]);
 
   useEffect(() => {
     if (getData.redirect) {
@@ -157,39 +144,24 @@ const Create = () => {
     e.preventDefault();
     const session = Cookies.get("_token");
 
-    const response = await fetch(url + "/admin/create", {
+    const response = await fetch(url + "/admin/edit/" + id, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session}`,
       },
-      body: JSON.stringify({
-        title,
-        description,
-        category,
-        price,
-        rooms,
-        wc,
-        parking,
-        street,
-        lat,
-        lng,
-      }),
+      body: JSON.stringify(formData),
     })
       .then((response) => response.json())
       .then((data) => {
         setGetData(data);
-        console.log(data);
       })
       .catch((error) => console.error(error));
   };
 
   return (
-    <>
-      <Layout />
-      <h2 className="text-center text-2xl font-semibold text-indigo-900 pt-12">
-        {getData.page}
-      </h2>
+    <div className="pb-12">
+      <PageTitle getData={getData} />
       {getData.errors ? (
         <div className="max-w-md mx-auto my-10">
           {getData.errors.map((error) => (
@@ -210,19 +182,15 @@ const Create = () => {
           </div>
         )
       )}
-      <div className="mx-auto max-w-4xl my-10 md:px-10">
+      <div className="mx-auto max-w-4xl my-10 px-4 md:px-10">
         <div className="bg-white py-8 px-4  shadow-md border border-[1] rounded-md">
-          <form
-            className="space-y-5"
-            action="/admin/create"
-            onSubmit={handleSubmit}
-          >
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div className="space-y-1">
               <h3 className="text-lg leading-6 font-normal text-gray-900 text-center">
                 Information générale
               </h3>
               <p className="text-gray-500 text-center">
-                Ajoutez des informations sur la propriété à vendre
+                Modifiez les informations de votre propriété
               </p>
             </div>
             <div>
@@ -238,9 +206,12 @@ const Create = () => {
                 placeholder="Titre de la propriété: ex: 'Maison de 3 chambres'"
                 type="text"
                 name="title"
-                value={title}
+                value={formData.title}
                 onChange={(e) => {
-                  setTitle(e.target.value);
+                  setFormData({
+                    ...formData,
+                    title: e.target.value,
+                  });
                 }}
               />
             </div>
@@ -256,9 +227,12 @@ const Create = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-sm placeholder-gray-400"
                 placeholder="Décrivez la propriété en quelques phrases"
                 name="description"
-                value={description}
+                value={formData.description}
                 onChange={(e) => {
-                  setDescription(e.target.value);
+                  setFormData({
+                    ...formData,
+                    description: e.target.value,
+                  });
                 }}
               ></textarea>
             </div>
@@ -274,9 +248,12 @@ const Create = () => {
                   id="category"
                   className="w-full px-3 py-2 border border-gray-300 rounded-sm placeholder-gray-400"
                   name="category"
-                  value={category}
+                  value={formData.category}
                   onChange={(e) => {
-                    setCategory(e.target.value);
+                    setFormData({
+                      ...formData,
+                      category: e.target.value,
+                    });
                   }}
                 >
                   <option value="">-- Sélectionnez --</option>
@@ -300,13 +277,19 @@ const Create = () => {
                   placeholder="Prix de la propriété: ex: 100000€"
                   type="number"
                   name="price"
-                  value={price?.toString()}
+                  value={formData.price?.toString()}
                   onChange={(e) => {
                     const valuePrice = e.target.value;
                     {
                       valuePrice === ""
-                        ? setPrice(0)
-                        : setPrice(parseFloat(valuePrice));
+                        ? setFormData({
+                            ...formData,
+                            price: 0,
+                          })
+                        : setFormData({
+                            ...formData,
+                            price: parseFloat(valuePrice),
+                          });
                     }
                   }}
                 />
@@ -324,13 +307,19 @@ const Create = () => {
                   id="rooms"
                   className="w-full px-3 py-2 border border-gray-300 rounded-sm placeholder-gray-400"
                   name="rooms"
-                  value={rooms?.toString()}
+                  value={formData.rooms?.toString()}
                   onChange={(e) => {
                     const valueRooms = e.target.value;
                     {
                       valueRooms === ""
-                        ? setRooms(0)
-                        : setRooms(parseFloat(valueRooms));
+                        ? setFormData({
+                            ...formData,
+                            rooms: 0,
+                          })
+                        : setFormData({
+                            ...formData,
+                            rooms: parseFloat(valueRooms),
+                          });
                     }
                   }}
                 >
@@ -354,11 +343,19 @@ const Create = () => {
                   id="wc"
                   className="w-full px-3 py-2 border border-gray-300 rounded-sm placeholder-gray-400"
                   name="wc"
-                  value={wc?.toString()}
+                  value={formData.wc?.toString()}
                   onChange={(e) => {
                     const valueWc = e.target.value;
                     {
-                      valueWc === "" ? setWc(0) : setWc(parseFloat(valueWc));
+                      valueWc === ""
+                        ? setFormData({
+                            ...formData,
+                            wc: 0,
+                          })
+                        : setFormData({
+                            ...formData,
+                            wc: parseFloat(valueWc),
+                          });
                     }
                   }}
                 >
@@ -382,13 +379,19 @@ const Create = () => {
                   id="parking"
                   className="w-full px-3 py-2 border border-gray-300 rounded-sm placeholder-gray-400"
                   name="parking"
-                  value={parking?.toString()}
+                  value={formData.parking?.toString()}
                   onChange={(e) => {
                     const valueParking = e.target.value;
                     {
                       valueParking === ""
-                        ? setParking(0)
-                        : setParking(parseFloat(valueParking));
+                        ? setFormData({
+                            ...formData,
+                            parking: 0,
+                          })
+                        : setFormData({
+                            ...formData,
+                            parking: parseFloat(valueParking),
+                          });
                     }
                   }}
                 >
@@ -407,7 +410,8 @@ const Create = () => {
                 Localisation
               </h3>
               <p className="text-gray-500 text-center">
-                Localisez votre propriété sur la carte en déplaçant le marqueur
+                Modofiez la localisation de votre propriété en déplaçant le
+                marqueur
               </p>
             </div>
             <div
@@ -418,7 +422,7 @@ const Create = () => {
               }}
             >
               <MapContainer
-                center={[48.866667, 2.333333]}
+                center={containerPosition}
                 zoom={7}
                 scrollWheelZoom={true}
                 dragging={true}
@@ -426,13 +430,13 @@ const Create = () => {
               >
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 <Marker
-                  position={[Number(lat), Number(lng)]}
+                  position={[Number(formData.lat), Number(formData.lng)]}
                   draggable={true}
                   eventHandlers={{ dragend: handleMarkerDragEnd }}
                 >
                   <Popup autoPan={true}>
                     <strong className="font-bold text-indigo-900 ">
-                      {street}
+                      {formData.street}
                     </strong>
                   </Popup>
                 </Marker>
@@ -444,43 +448,47 @@ const Create = () => {
               name="street"
               id="street"
               placeholder="Déplacez le marqueur sur la carte pour localiser votre propriété"
-              value={street}
-              onChange={(e) => {
-                setStreet(e.target.value);
-              }}
+              value={formData.street}
+              onChange={(e) => {}}
               disabled
             />
             <input
               type="hidden"
               name="lat"
               id="lat"
-              value={lat}
+              value={formData.lat}
               onChange={(e) => {
                 const valueLat = Number(e.target.value);
-                setLat(valueLat);
+                setFormData({
+                  ...formData,
+                  lng: valueLat,
+                });
               }}
             />
             <input
               type="hidden"
               name="lng"
               id="lng"
-              value={lng}
+              value={formData.lng}
               onChange={(e) => {
                 const valueLng = Number(e.target.value);
-                setLng(valueLng);
+                setFormData({
+                  ...formData,
+                  lng: valueLng,
+                });
               }}
             />
 
             <input
               className="w-full bg-indigo-900 hover:bg-indigo-700 transition text-white font-medium py-3 cursor-pointer uppercase"
               type="submit"
-              value="Ajouter une image"
+              value="Sauvegarder les modifications"
             />
           </form>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
-export default Create;
+export default Edit;
