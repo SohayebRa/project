@@ -65,8 +65,9 @@ const View = () => {
         })
           .then((response) => response.json())
           .then((data) => {
-            setPosition([data.property.lat, data.property.lng]);
             setGetData(data);
+            !data.redirect &&
+              setPosition([data.property.lat, data.property.lng]);
           })
       : fetch(url + "/property/" + id, {
           method: "GET",
@@ -79,7 +80,8 @@ const View = () => {
           .then((response) => response.json())
           .then((data) => {
             setGetData(data);
-            console.log(data);
+            !data.redirect &&
+              setPosition([data.property.lat, data.property.lng]);
           });
   }, []);
 
@@ -94,6 +96,13 @@ const View = () => {
   useEffect(() => {
     setPageTitle(getData.page);
   }, [setPageTitle, getData]);
+
+  useEffect(() => {
+    getData.property &&
+      getData.property.lat &&
+      getData.property.lng &&
+      setPosition([getData.property.lat, getData.property.lng]);
+  }, [getData.property, getData.property]);
 
   useEffect(() => {
     setMapKey((prevKey) => prevKey + 1);
@@ -139,6 +148,7 @@ const View = () => {
               <a
                 href="/"
                 className="text-xs px-4 py-1 bg-gray-200 hover:bg-indigo-100 text-gray-700 hover:text-indigo-600 font-medium uppercase rounded-sm transition"
+                title="Page d'Accueil"
               >
                 {
                   categories.find(
@@ -202,6 +212,7 @@ const View = () => {
                     <a
                       href={`/messages/${id}`}
                       className="bg-indigo-800 hover:bg-indigo-900 text-white font-medium uppercase text-sm w-full py-3 cursor-pointer text-center rounded-sm"
+                      title="Page de messages de l'annonce"
                     >
                       Voir messsages
                     </a>
@@ -227,6 +238,7 @@ const View = () => {
                       <a
                         href="/auth/login"
                         className="text-indigo-800 text-sm lg:text-base font-medium"
+                        title="Connexion"
                       >
                         Connectez-vous
                       </a>

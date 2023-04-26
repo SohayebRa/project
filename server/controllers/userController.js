@@ -172,9 +172,11 @@ const confirm = async (req, res) => {
   }
 
   const { token } = req.params;
+  console.log("Token Recuperation");
 
   // Vérifiez si le token est valide
   const user = await User.findOne({ where: { token } });
+  console.log("Token Verification");
 
   if (!user) {
     return res.json({
@@ -189,7 +191,7 @@ const confirm = async (req, res) => {
   user.confirmed = true;
   await user.save();
 
-  res.json({
+  return res.json({
     page: "Compte vérifié avec succès",
     msg: "Le compte a été vérifié avec succès",
   });
@@ -254,7 +256,7 @@ const checkToken = async (req, res) => {
   const user = await User.findOne({ where: { token } });
 
   //auth/confirm
-  if (!user) {
+  if (!user && !user.token) {
     return res.json({
       page: "Réinitialisez votre mot de passe",
       msg: "Une erreur s'est produite lors de la validation de vos informations, veuillez réessayer",

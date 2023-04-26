@@ -6,6 +6,10 @@ const Message = db.define("messages", {
     type: DataTypes.STRING(250),
     allowNull: false,
   },
+  checked: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+  },
 });
 
 export default Message;

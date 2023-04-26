@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { categories } from "../helpers/arrays";
 
 interface ListCardProps {
@@ -21,7 +22,6 @@ interface ListCardProps {
 }
 
 const ListCard = ({ property, handleStatus, handleRemove }: ListCardProps) => {
-  const { title, image, price, id } = property;
   return (
     <div className="py-4 w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
       <div className="sm:w-1/4 md:w-2/6 lg:w-1/6">
@@ -63,7 +63,7 @@ const ListCard = ({ property, handleStatus, handleRemove }: ListCardProps) => {
           {property.published ? (
             <>
               <i className="fa-solid fa-eye" />
-              Publié
+              Public
             </>
           ) : (
             <>

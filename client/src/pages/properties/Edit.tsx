@@ -46,17 +46,26 @@ const Edit = () => {
     lng: getData.property?.lng || 2.333333,
   });
 
-  const [containerPosition, setContainerPosition] = useState<[number, number]>(
-    [formData.lat, formData.lng] || [48.866667, 2.333333]
-  );
+  const [lat, setLat] = useState(getData.property?.lat || 48.866667);
+  const [lng, setLng] = useState(getData.property?.lng || 2.333333);
+
+  const [position, setPosition] = useState<[number, number]>([
+    lat || 48.866667,
+    lng || 2.333333,
+  ]);
 
   const handleMarkerDragEnd = async (e: any) => {
     const newPosition = e.target.getLatLng();
-    setFormData({
-      ...formData,
+    setLat(newPosition.lat);
+    setLng(newPosition.lng);
+
+    setFormData((prevState) => ({
+      ...prevState,
       lat: newPosition.lat,
       lng: newPosition.lng,
-    });
+    }));
+
+    setPosition([newPosition.lat, newPosition.lng]);
 
     try {
       const response = await fetch(
@@ -72,10 +81,10 @@ const Edit = () => {
         town && town ? `${town},` : city && city ? `${city},` : ""
       } ${country && country ? country : ""}`;
 
-      setFormData({
-        ...formData,
+      setFormData((prevState) => ({
+        ...prevState,
         street: fullAdress,
-      });
+      }));
     } catch (error) {
       console.error(error);
     }
@@ -117,7 +126,7 @@ const Edit = () => {
 
     getData.property?.lat &&
       getData.property?.lng &&
-      setContainerPosition([getData.property?.lat, getData.property?.lng]);
+      setPosition([getData.property?.lat, getData.property?.lng]);
   }, [getData]);
 
   useEffect(() => {
@@ -410,7 +419,7 @@ const Edit = () => {
                 Localisation
               </h3>
               <p className="text-gray-500 text-center">
-                Modofiez la localisation de votre propriété en déplaçant le
+                Modifiez la localisation de votre propriété en déplaçant le
                 marqueur
               </p>
             </div>
@@ -422,7 +431,7 @@ const Edit = () => {
               }}
             >
               <MapContainer
-                center={containerPosition}
+                center={position}
                 zoom={7}
                 scrollWheelZoom={true}
                 dragging={true}
@@ -430,7 +439,7 @@ const Edit = () => {
               >
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 <Marker
-                  position={[Number(formData.lat), Number(formData.lng)]}
+                  position={[Number(lat), Number(lng)]}
                   draggable={true}
                   eventHandlers={{ dragend: handleMarkerDragEnd }}
                 >

@@ -33,6 +33,7 @@ const removeImg = async (req, res, next) => {
       .then((result) => res.json({ result }));
     return next();
   }
+  next();
 };
 
 export default removeImg;

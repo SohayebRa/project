@@ -8,6 +8,7 @@ interface UserData {
   page: string;
   error: boolean;
   msg: string;
+  redirect?: string;
 }
 
 const Confirm = () => {
@@ -15,6 +16,7 @@ const Confirm = () => {
     page: "",
     error: false,
     msg: "",
+    redirect: "",
   });
 
   const { token } = useParams();
@@ -22,7 +24,6 @@ const Confirm = () => {
   const url = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
-    console.log(token);
     fetch(url + `/auth/confirm/${token}`, {
       method: "GET",
       headers: {
@@ -34,10 +35,12 @@ const Confirm = () => {
       .then((response) => response.json())
       .then((data) => {
         setGetData(data);
-
-        setPageTitle(getData.page);
       });
-  }, [token, setPageTitle, url]);
+  }, [token]);
+
+  useEffect(() => {
+    setPageTitle(getData.page);
+  }, [setPageTitle, getData]);
 
   return (
     <div className="py-32">

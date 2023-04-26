@@ -62,7 +62,7 @@ const Pagination = ({ getData, isProperties }: PaginationProps) => {
         </>
       ) : (
         <p className="text-sm text-gray-700 gap-2">
-          <span className="font-normal">{getData.total}0 Résultats</span>
+          <span className="font-normal">0 Résultats</span>
         </p>
       )}
     </div>

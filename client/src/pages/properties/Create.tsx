@@ -46,13 +46,26 @@ const Create = () => {
     lng: getData.property?.lng || 2.333333,
   });
 
-  const handleMarkerDragEnd = useCallback(async (e: any) => {
+  const [lat, setLat] = useState(getData.property?.lat || 48.866667);
+  const [lng, setLng] = useState(getData.property?.lng || 2.333333);
+
+  const [position, setPosition] = useState<[number, number]>([
+    lat || 48.866667,
+    lng || 2.333333,
+  ]);
+
+  const handleMarkerDragEnd = async (e: any) => {
     const newPosition = e.target.getLatLng();
-    setFormData({
-      ...formData,
+    setLat(newPosition.lat);
+    setLng(newPosition.lng);
+
+    setFormData((prevState) => ({
+      ...prevState,
       lat: newPosition.lat,
       lng: newPosition.lng,
-    });
+    }));
+
+    setPosition([newPosition.lat, newPosition.lng]);
 
     try {
       const response = await fetch(
@@ -68,23 +81,14 @@ const Create = () => {
         town && town ? `${town},` : city && city ? `${city},` : ""
       } ${country && country ? country : ""}`;
 
-      setFormData({
-        ...formData,
+      setFormData((prevState) => ({
+        ...prevState,
         street: fullAdress,
-      });
+      }));
     } catch (error) {
       console.error(error);
     }
-  }, []);
-
-  const [position, setPosition] = useState<[number, number]>([
-    formData.lat || 48.866667,
-    formData.lng || 2.333333,
-  ]);
-
-  useEffect(() => {
-    setPosition([formData.lat, formData.lng]);
-  }, [formData.lat, formData.lng]);
+  };
 
   const url = import.meta.env.VITE_BACKEND_URL;
 
@@ -127,6 +131,7 @@ const Create = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const session = Cookies.get("_token");
+    console.log(formData);
 
     const response = await fetch(url + "/admin/create", {
       method: "POST",
@@ -437,26 +442,20 @@ const Create = () => {
               type="hidden"
               name="lat"
               id="lat"
-              value={formData.lat}
+              value={lat}
               onChange={(e) => {
                 const valueLat = Number(e.target.value);
-                setFormData({
-                  ...formData,
-                  lat: valueLat,
-                });
+                setLat(valueLat);
               }}
             />
             <input
               type="hidden"
               name="lng"
               id="lng"
-              value={formData.lng}
+              value={lng}
               onChange={(e) => {
                 const valueLng = Number(e.target.value);
-                setFormData({
-                  ...formData,
-                  lng: valueLng,
-                });
+                setLng(valueLng);
               }}
             />
 

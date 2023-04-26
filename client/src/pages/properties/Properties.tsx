@@ -7,12 +7,25 @@ import ListCard from "../../components/ListCard";
 import Pagination from "../../components/Pagination";
 import PageTitle from "../../components/PageTitle";
 
+import styled, { keyframes } from "styled-components";
+import { fadeInLeft, fadeInUp } from "react-animations";
+
+const FadeInLeftDiv = styled.div`
+  animation: 1s ${keyframes`${fadeInLeft}`};
+`;
+
+const FadeInUpDiv = styled.div`
+  animation: 1s ${keyframes`${fadeInUp}`};
+`;
+
 const Properties = () => {
   const navigate = useNavigate();
   const { search } = useLocation();
   const { page } = queryString.parse(search);
 
   const [isProperties, setIsProperties] = useState<boolean>(false);
+  const [showOne, setShowOne] = useState<boolean>(false);
+  const [showTwo, setShowTwo] = useState<boolean>(false);
 
   const [getData, setGetData] = useState<PropertiesProps>({
     page: "",
@@ -42,6 +55,7 @@ const Properties = () => {
     offset: null,
     limit: null,
   });
+  const [show, setShow] = useState<boolean>(false);
 
   const url = import.meta.env.VITE_BACKEND_URL;
 
@@ -84,8 +98,6 @@ const Properties = () => {
 
   const handleStatus = (id: string) => {
     const session = Cookies.get("_token");
-
-    // Envoyer la requête
     fetch(url + "/admin/" + id, {
       method: "PUT",
       headers: {
@@ -122,9 +134,8 @@ const Properties = () => {
     })
       .then((response) => response.json())
       .then((data) => {
-        // Mettre à jour le state et supprimer l'élément du tableau
         setGetData((prev) => ({
-          ...getData,
+          ...prev,
           properties: getData.properties?.filter(
             (property) => property.id !== data.property.id
           ),
@@ -132,28 +143,43 @@ const Properties = () => {
       });
   };
 
+  useEffect(() => {
+    setShowOne(true);
+    setShowTwo(true);
+  }, []);
+
   return (
     <div className="pb-20">
       <PageTitle getData={getData} />
       <div className="mx-auto sm:container w-11/12 flex flex-col gap-8 items-start">
-        <a
-          href="/properties/create"
-          className="py-4 px-6 bg-indigo-800 text-white rounded-sm text-sm font-medium uppercase flex items-center gap-2 hover:bg-indigo-600 transition"
-        >
-          <i className="fa-sharp fa-solid fa-plus" />
-          Ajouter une propriété
-        </a>
+        {showOne && (
+          <FadeInLeftDiv>
+            <a
+              href="/properties/create"
+              className="py-4 px-6 bg-indigo-800 text-white rounded-sm text-sm font-medium uppercase flex items-center gap-2 hover:bg-indigo-600 transition"
+              title="Page d'ajout de propriété"
+            >
+              <i className="fa-sharp fa-solid fa-plus" />
+              Ajouter une propriété
+            </a>
+          </FadeInLeftDiv>
+        )}
         <div className="mx-auto container px-4 shadow-md border">
           <div className="flex items-center flex-col gap-2 divide-y divide-gray-300 ">
             {isProperties ? (
-              getData.properties?.map((property) => (
-                <ListCard
-                  key={property.id}
-                  property={property}
-                  handleStatus={handleStatus}
-                  handleRemove={handleRemove}
-                />
-              ))
+              getData.properties?.map(
+                (property) =>
+                  showTwo && (
+                    <FadeInUpDiv key={property.id}>
+                      <ListCard
+                        key={property.id}
+                        property={property}
+                        handleStatus={handleStatus}
+                        handleRemove={handleRemove}
+                      />
+                    </FadeInUpDiv>
+                  )
+              )
             ) : (
               <p className="text-center text-gray-500 p-6">
                 Il n'y a pas de propriétés à afficher

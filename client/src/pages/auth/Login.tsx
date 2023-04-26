@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useSetPageTitle } from "./../../hooks/useSetPageTitle";
 import useApp from "../../hooks/useApp";
 import Logo from "./../../assets/png/LogoBlack.png";
+import Cookies from "js-cookie";
 
 interface UserData {
   page: string;
@@ -18,9 +19,11 @@ interface UserData {
 const Login = () => {
   const navigate = useNavigate();
   const { setCookie, session } = useApp();
-  {
-    session && navigate("/");
-  }
+  useEffect(() => {
+    if (session) {
+      navigate("/");
+    }
+  }, [session]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -73,10 +76,8 @@ const Login = () => {
       })
       .catch((error) => console.error(error));
 
-    // Stocker la cookie avec le token
-
-    // Redirection vers l'accueil
-    navigate("/");
+    const session = Cookies.get("_token");
+    session && navigate("/");
   };
 
   return (

@@ -20,6 +20,7 @@ const identifyUser = async (req, res, next) => {
     if (user) {
       req.user = user;
     }
+
     return next();
   } catch (error) {
     console.log(error);

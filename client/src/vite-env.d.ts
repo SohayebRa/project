@@ -114,20 +114,22 @@ interface ViewProps {
   redirect?: string;
 }
 
-interface MessagesProps {
-  page: string;
-  errors?: { msg: string }[];
-  messages?: {
+interface MessageByUser {
+  id: number | null;
+  name: string;
+  email: string;
+  messages: {
     id: number | null;
     message: string;
     createdAt: string;
     propertyId: string;
-    user: {
-      id: number;
-      name: string;
-      email: string;
-    };
   }[];
+}
+
+interface MessagesProps {
+  page: string;
+  errors?: { msg: string }[];
+  messages?: MessageByUser[];
   msg: string;
   redirect?: string;
 }
@@ -154,6 +156,31 @@ interface HomeProps {
     title: string;
     userId: number | null;
     wc: number | null;
+  }[];
+  msg: string;
+  redirect?: string | null;
+}
+
+interface ProfileProps {
+  page: string;
+  errors?: { msg: string }[];
+  user?: {
+    id: number | null;
+    name: string;
+    email: string;
+    createdAt: string;
+  };
+  messages: {
+    id: number | null;
+    message: string;
+    checked: boolean;
+    createdAt: string;
+    propertyId: string;
+    userInfo: {
+      id: number | null;
+      name: string;
+      email: string;
+    };
   }[];
   msg: string;
   redirect?: string | null;

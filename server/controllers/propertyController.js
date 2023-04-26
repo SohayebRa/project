@@ -3,8 +3,6 @@ import { validationResult } from "express-validator";
 
 const admin = async (req, res) => {
   const currentPage = req.query.page;
-  console.log("====================================");
-  console.log("CURRENT PAGE:", currentPage);
 
   const regex = /^[0-9]$/;
 
@@ -112,6 +110,8 @@ const save = async (req, res) => {
       data: req.body,
     });
   }
+
+  console.log(req.body);
 
   // Creez un record dans la table properties
   const {
@@ -352,16 +352,23 @@ const showProperty = async (req, res) => {
     ],
   });
 
-  if (!property || !property.published) {
-    return res.json({ redirect: "/404" });
-  }
-
   let isSeller = false;
 
-  if (req.user?.id === property.userId) {
-    isSeller = true;
+  // Verifier que l'utilisateur est connecté
+  if (!req.user) {
+    if (!property.published) {
+      return res.json({ redirect: "/404" });
+    }
   } else {
-    isSeller = false;
+    // Verifier que la propriété appartient à l'utilisateur
+    if (property.userId.toString() !== req.user.id.toString()) {
+      // Vérifier que la propriété est publiée
+      if (!property.published) {
+        return res.json({ redirect: "/404" });
+      }
+    } else {
+      isSeller = true;
+    }
   }
 
   res.json({
@@ -417,6 +424,7 @@ const sendMessage = async (req, res) => {
 
   await Message.create({
     message,
+    checked: false,
     propertyId,
     userId,
   });
@@ -443,6 +451,7 @@ const showMessages = async (req, res) => {
       },
     ],
   });
+
   if (!property) {
     return res.json({ redirect: "/properties" });
   }
@@ -452,9 +461,44 @@ const showMessages = async (req, res) => {
     return res.json({ redirect: "/properties" });
   }
 
+  // Regrouper les messages par utilisateur
+  const messagesByUser = [];
+
+  property.messages.forEach((message) => {
+    const user = message.user;
+    const index = messagesByUser.findIndex((x) => x.id === user.id);
+
+    if (index === -1) {
+      messagesByUser.push({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        messages: [
+          {
+            id: message.id,
+            message: message.message,
+            createdAt: message.createdAt,
+            propertyId: message.propertyId,
+          },
+        ],
+      });
+    } else {
+      messagesByUser[index].messages.push({
+        id: message.id,
+        message: message.message,
+        createdAt: message.createdAt,
+        propertyId: message.propertyId,
+      });
+    }
+  });
+
+  messagesByUser.forEach((user) => {
+    user.messages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  });
+
   res.json({
-    page: "Messages",
-    messages: property.messages,
+    page: "Messages: " + property.title,
+    messages: messagesByUser,
   });
 };
 

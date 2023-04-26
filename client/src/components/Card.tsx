@@ -16,7 +16,7 @@ interface PropertyProps {
 
 const Card = ({ property }: PropertyProps) => {
   return (
-    <div className="bg-gray-50 border border-gray-200 rounded-sm shadow">
+    <div className="bg-gray-50 border border-gray-200 rounded-sm transition hover:shadow-lg hover:shadow-gray-300 hover:border-indigo-300">
       <a href={`/property/${property.id}`}>
         <img
           className="h-60 w-full"
