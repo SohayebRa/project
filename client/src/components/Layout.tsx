@@ -117,12 +117,16 @@ const Layout = () => {
           <div className="flex gap-3 items-center">
             <a
               href="https://www.instagram.com/sohayeb.ra/"
+              title="Profil de Instagram"
+              target="_blank"
               className="text-gray-100 text-sm"
             >
               Instagram
             </a>
             <a
               href="https://www.linkedin.com/in/sohayeb-rajjaf-1bb3621b1/"
+              title="Profil de LinkedIn"
+              target="_blank"
               className="text-gray-100 text-sm"
             >
               LinkedIn

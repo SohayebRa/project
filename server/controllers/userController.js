@@ -178,7 +178,7 @@ const confirm = async (req, res) => {
   const user = await User.findOne({ where: { token } });
   console.log("Token Verification");
 
-  if (!user) {
+  if (!user || user.token === null) {
     return res.json({
       page: "Erreur lors de la vérification de votre compte",
       msg: "Une erreur s'est produite lors de la vérification de votre compte, veuillez réessayer",
@@ -194,6 +194,8 @@ const confirm = async (req, res) => {
   return res.json({
     page: "Compte vérifié avec succès",
     msg: "Le compte a été vérifié avec succès",
+    error: false,
+    redirect: "/auth/login",
   });
 };
 

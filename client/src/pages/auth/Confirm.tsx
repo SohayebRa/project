@@ -1,6 +1,6 @@
 // Signup page
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useSetPageTitle } from "./../../hooks/useSetPageTitle";
 import Logo from "./../../assets/png/LogoBlack.png";
 
@@ -12,6 +12,8 @@ interface UserData {
 }
 
 const Confirm = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState<boolean>(false);
   const [getData, setGetData] = useState<UserData>({
     page: "",
     error: false,
@@ -21,6 +23,7 @@ const Confirm = () => {
 
   const { token } = useParams();
   const setPageTitle = useSetPageTitle();
+
   const url = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
@@ -36,7 +39,17 @@ const Confirm = () => {
       .then((data) => {
         setGetData(data);
       });
-  }, [token]);
+  }, []);
+
+  useEffect(() => {
+    if (getData.redirect) {
+      setLoading(true);
+      setTimeout(() => {
+        setLoading(false);
+        navigate("/auth/login");
+      }, 2000);
+    }
+  }, [getData.redirect]);
 
   useEffect(() => {
     setPageTitle(getData.page);
@@ -45,7 +58,17 @@ const Confirm = () => {
   return (
     <div className="py-32">
       <img src={Logo} className="mx-auto w-8/12 md:w-4/12 lg:w-2/12 py-4" />
-      {getData.error ? (
+      {loading && (
+        <div className="w-20 mx-auto my-40">
+          <div className="lds-ellipsis">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+        </div>
+      )}
+      {/* {getData.error ? (
         <div className="max-w-md mx-auto my-10">
           {getData.msg && (
             <p
@@ -64,7 +87,7 @@ const Confirm = () => {
             </p>
           </div>
         )
-      )}
+      )} */}
       <div className="mt-8 mx-auto max-w-md">
         {!getData.error ? (
           <a

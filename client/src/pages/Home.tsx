@@ -159,7 +159,6 @@ const Home = () => {
         handleFilterPrice={handleFilterPrice}
         handleSearch={handleSearch}
       />
-      {/* <PageTitle getData={getData} /> */}
       <div className="w-11/12 sm:w-2/3 mx-auto py-24">
         <h2 className="text-center text-3xl font-semibold text-indigo-900 pb-12">
           Dernières annonces

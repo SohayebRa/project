@@ -71,9 +71,13 @@ const CarouselBanner = () => {
               {slide.title}
             </h1>
             {slide.button && (
-              <button className="bg-indigo-900 hover:bg-indigo-700 transition text-white font-semibold py-4 px-5 cursor-pointer text-base rounded-sm sm:w-1/6 mt-5">
+              <a
+                href="/properties"
+                title="Page de mes propriétés"
+                className="bg-indigo-900 hover:bg-indigo-700 transition text-white font-semibold py-4 px-5 cursor-pointer text-base text-center rounded-sm sm:w-1/6 mt-5"
+              >
                 {slide.button}
-              </button>
+              </a>
             )}
           </div>
         </div>
